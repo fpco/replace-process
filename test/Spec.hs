@@ -31,14 +31,11 @@ argPairs = do
     return (arg1, arg2)
 
 master :: IO ()
-master = hspec $ do
-    it "exit code sanity" $ do
-        cmd <- getExecutablePath
-        (ec, _out, _err) <- readProcessWithExitCode cmd ["grandchild"] ""
-        ec `shouldBe` ExitFailure 2
+master = do
+    cmd <- getExecutablePath
+    (gcEC, _out, _err) <- readProcessWithExitCode cmd ["grandchild"] ""
 
-    forM_ argPairs $ \(arg1, arg2) -> it (unwords [arg1, arg2]) $ do
-        cmd <- getExecutablePath
+    hspec $ forM_ argPairs $ \(arg1, arg2) -> it (unwords [arg1, arg2]) $ do
         (ec, out, err) <- readProcessWithExitCode cmd ["child", arg1, arg2] ""
 
         out `shouldBe` unlines
@@ -51,7 +48,7 @@ master = hspec $ do
             , "end grandchild"
             ]
         err `shouldBe` ""
-        ec `shouldBe` ExitFailure 2
+        ec `shouldBe` gcEC
 
 child :: String -> String -> IO a
 child arg1 arg2 = do
