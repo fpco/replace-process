@@ -31,21 +31,27 @@ argPairs = do
     return (arg1, arg2)
 
 master :: IO ()
-master = hspec $ forM_ argPairs $ \(arg1, arg2) -> it (unwords [arg1, arg2]) $ do
-    cmd <- getExecutablePath
-    (ec, out, err) <- readProcessWithExitCode cmd ["child", arg1, arg2] ""
+master = hspec $ do
+    it "exit code sanity" $ do
+        cmd <- getExecutablePath
+        (ec, _out, _err) <- readProcessWithExitCode cmd ["grandchild"] ""
+        ec `shouldBe` ExitFailure 2
 
-    out `shouldBe` unlines
-        [ "start child"
-        , "start grandchild"
-        , show $ case arg1 of
-              "env" -> Just ("BAR" :: String)
-              "noenv" -> Nothing
-              _ -> error $ "arg1 is invalid: " ++ arg1
-        , "end grandchild"
-        ]
-    err `shouldBe` ""
-    ec `shouldBe` ExitFailure 2
+    forM_ argPairs $ \(arg1, arg2) -> it (unwords [arg1, arg2]) $ do
+        cmd <- getExecutablePath
+        (ec, out, err) <- readProcessWithExitCode cmd ["child", arg1, arg2] ""
+
+        out `shouldBe` unlines
+            [ "start child"
+            , "start grandchild"
+            , show $ case arg1 of
+                "env" -> Just ("BAR" :: String)
+                "noenv" -> Nothing
+                _ -> error $ "arg1 is invalid: " ++ arg1
+            , "end grandchild"
+            ]
+        err `shouldBe` ""
+        ec `shouldBe` ExitFailure 2
 
 child :: String -> String -> IO a
 child arg1 arg2 = do
