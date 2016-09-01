@@ -15,7 +15,6 @@ import Foreign.Marshal.Array (withArray0)
 import Foreign.C (CString, CInt (CInt))
 import Foreign.C (getErrno, errnoToIOError)
 import Data.ByteString (useAsCString)
-import System.Process.Internals (pPrPr_disableITimers)
 import qualified Data.ByteString.Char8 as BC
 import Control.Monad (void)
 #else
@@ -97,7 +96,7 @@ executeFile path search args Nothing = do
   withFilePath path $ \s ->
     withMany withFilePath (path:args) $ \cstrs ->
       withArray0 nullPtr cstrs $ \arr -> do
-        pPrPr_disableITimers
+        -- not needed on Windows pPrPr_disableITimers
         if search
            then throwErrnoPathIfMinus1_ "executeFile" path (c_execvp s arr)
            else throwErrnoPathIfMinus1_ "executeFile" path (c_execv s arr)
@@ -110,7 +109,7 @@ executeFile path search args (Just env) = do
     let env' = map (\ (name, val) -> name `BC.append` ('=' `BC.cons` val)) env in
     withMany withFilePath env' $ \cenv ->
       withArray0 nullPtr cenv $ \env_arr -> do
-        pPrPr_disableITimers
+        -- not needed on Windows pPrPr_disableITimers
         if search
            then throwErrnoPathIfMinus1_ "executeFile" path
                    (c_execvpe s arg_arr env_arr)
