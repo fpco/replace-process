@@ -35,7 +35,6 @@ master = hspec $ forM_ argPairs $ \(arg1, arg2) -> it (unwords [arg1, arg2]) $ d
     cmd <- getExecutablePath
     (ec, out, err) <- readProcessWithExitCode cmd ["child", arg1, arg2] ""
 
-    ec `shouldBe` ExitFailure 2
     out `shouldBe` unlines
         [ "start child"
         , "start grandchild"
@@ -46,6 +45,7 @@ master = hspec $ forM_ argPairs $ \(arg1, arg2) -> it (unwords [arg1, arg2]) $ d
         , "end grandchild"
         ]
     err `shouldBe` ""
+    ec `shouldBe` ExitFailure 2
 
 child :: String -> String -> IO a
 child arg1 arg2 = do
